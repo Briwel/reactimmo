@@ -8,17 +8,22 @@ import {
   Param,
   ParseIntPipe,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
+import { AuthService } from '../../auth/auth.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { LoginDto } from './dto/login.dto';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 @UseGuards(ThrottlerGuard)
-@Controller('auth')
+@Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService,
+  ) {}
 
   // --- NOUVELLES ROUTES GOOGLE ---
 
@@ -30,7 +35,7 @@ export class UsersController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   // Google renvoie l'utilisateur ici après la connexion
-  async googleAuthRedirect(
+  googleAuthRedirect(
     @Req()
     req: {
       user?: {
@@ -43,21 +48,34 @@ export class UsersController {
   ) {
     // On envoie les infos reçues de Google au service pour créer/connecter le compte
     if (!req.user) {
-      throw new Error('Aucun utilisateur trouvé');
+      throw new UnauthorizedException('Aucun utilisateur trouvé');
     }
-    return this.usersService.googleLogin(req.user);
+    // TODO: Implémenter googleLogin dans AuthService si nécessaire
+    throw new UnauthorizedException('Google login non implémenté');
   }
 
   // --- ROUTES EXISTANTES ---
 
   @Post('register')
   async register(@Body() createClientDto: CreateClientDto) {
-    return this.usersService.register(createClientDto);
+    return this.authService.register(createClientDto);
   }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    return this.usersService.login(loginDto.email, loginDto.password);
+    try {
+      // Récupérer le client complet pour le login
+      const client = await this.usersService.findByEmail(loginDto.email);
+      if (!client) {
+        throw new UnauthorizedException('Utilisateur non trouvé');
+      }
+      return this.authService.login(client);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Identifiants incorrects');
+    }
   }
 
   @Get('all')

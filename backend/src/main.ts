@@ -1,47 +1,34 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // 1. Préfixe global (Important : à définir AVANT les routes)
-  app.setGlobalPrefix('api');
-
-  // 2. Configuration du CORS sécurisée
-  // On remplace le '*' par les URLs spécifiques de tes environnements de dev
+  // 1. CONFIGURATION DU CORS
+  // Permet à ton frontend React (port 5173) de parler au backend (port 3000)
   app.enableCors({
-    origin: [
-      'http://localhost:3000', // Port par défaut NestJS (si besoin)
-      'http://localhost:5173', // Port par défaut de Vite (React)
-      process.env.FRONTEND_URL, // URL de production via variable d'environnement
-    ].filter(Boolean), // Supprime les valeurs undefined si FRONTEND_URL n'est pas rempli
+    origin: 'http://localhost:5173', // L'URL de ton frontend React
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
-  // 3. Validation globale avec class-validator
+  // 2. PRÉFIXE GLOBAL
+  // Toutes tes routes commenceront par /api (ex: /api/properties)
+  app.setGlobalPrefix('api');
+
+  // 3. VALIDATION GLOBALE
+  // Active la vérification automatique des données envoyées (DTOs)
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Nettoie les données reçues des champs inconnus
-      forbidNonWhitelisted: true, // Bloque la requête si un champ inconnu est envoyé
-      transform: true, // Convertit les types (ex: string en number si besoin)
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 
-  // 4. Lancement du serveur
-  const port = process.env.PORT || 3000;
+  const port = 3000;
   await app.listen(port);
-
-  console.log(`---`);
   console.log(`🚀 Serveur démarré sur : http://localhost:${port}/api`);
-  console.log(
-    `🔒 Sécurité : CORS activé, Rate Limiting prêt, Validation active`,
-  );
-  console.log(`---`);
 }
-
 void bootstrap();

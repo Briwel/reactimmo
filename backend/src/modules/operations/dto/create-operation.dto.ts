@@ -17,4 +17,7 @@ export class CreateOperationDto {
   @IsOptional()
   @IsString()
   commentaire?: string;
+
+  @IsOptional()
+  contratClauses?: string;
 }

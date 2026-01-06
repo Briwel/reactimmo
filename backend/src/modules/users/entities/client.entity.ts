@@ -6,11 +6,12 @@ import {
   Index,
 } from 'typeorm';
 import { Contrat } from '../../operations/entities/contrat.entity';
-import { Operations } from 'src/modules/operations/entities/operations.entity';
+import { Operations } from '../../operations/entities/operations.entity';
+import { Propriete } from '../../properties/entities/propriete.entity';
 
 @Entity()
-@Index(['email'])
-@Index(['nom', 'prenom'])
+@Index(['email']) // Index trouvé dans ta base
+@Index(['nom', 'prenom']) // Index trouvé dans ta base
 export class Client {
   @PrimaryGeneratedColumn()
   id: number;
@@ -28,14 +29,15 @@ export class Client {
   telephone: string;
 
   @Column({ type: 'text', nullable: true })
-  adresse: string;
-
-  @Column({ type: 'text', nullable: true })
-  password?: string; // Sera haché avec bcrypt
+  password?: string;
 
   @OneToMany(() => Contrat, (contrat) => contrat.client)
   contrats: Contrat[];
 
   @OneToMany(() => Operations, (operation) => operation.client)
   operations: Operations[];
+
+  // CORRECTION : Une seule déclaration propre
+  @OneToMany(() => Propriete, (propriete) => propriete.client)
+  proprietes: Propriete[];
 }

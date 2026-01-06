@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFiles,
+  Patch,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -19,19 +20,18 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
-  @Post('add')
-  async create(@Body() createPropertyDto: CreatePropertyDto) {
-    return this.propertiesService.create(createPropertyDto);
-  }
-
-  // NOUVELLE ROUTE : Upload d'images pour un bien spécifique
-  @Post(':id/upload')
+  /**
+   * ROUTE PRINCIPALE : Création d'un bien avec images
+   * Cette route capte les requêtes POST vers /api/properties
+   */
+  @Post()
   @UseInterceptors(
     FilesInterceptor('images', 10, {
+      // 'images' doit correspondre à la clé utilisée dans React
       storage: diskStorage({
-        destination: './uploads', // Les images seront stockées dans ce dossier
+        destination: './uploads', // Dossier où les photos seront stockées
         filename: (req, file, cb) => {
-          // Génère un nom unique pour éviter les doublons
+          // Génération d'un nom unique : timestamp + nombre aléatoire
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
           cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
@@ -39,12 +39,17 @@ export class PropertiesController {
       }),
     }),
   )
-  async uploadImages(
-    @Param('id', ParseIntPipe) id: number,
+  create(
+    @Body() createPropertyDto: CreatePropertyDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    const filenames = files.map((f) => f.filename);
-    return this.propertiesService.addPhotos(id, filenames);
+    // On extrait les noms des fichiers enregistrés
+    const filenames = files?.map((f) => f.filename) || [];
+    // On appelle la méthode unifiée du service qui gère texte + photos
+    return this.propertiesService.createWithPhotos(
+      createPropertyDto,
+      filenames,
+    );
   }
 
   @Get()
@@ -54,11 +59,30 @@ export class PropertiesController {
 
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
+    // Vérifie que findOne existe dans ton service
     return this.propertiesService.findOne(id);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
+    // Vérifie que remove existe dans ton service
     return this.propertiesService.remove(id);
+  }
+
+  @Patch(':id')
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      storage: diskStorage({
+        /* ... ta config ... */
+      }),
+    }),
+  )
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePropertyDto: any, // Il recevra les champs texte ici
+    @UploadedFiles() files: Express.Multer.File[], // Il recevra les fichiers ici
+  ) {
+    const filenames = files?.map((f) => f.filename) || [];
+    return this.propertiesService.update(id, updatePropertyDto, filenames);
   }
 }

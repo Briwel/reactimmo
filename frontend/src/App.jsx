@@ -13,6 +13,7 @@ import Details from './pages/public/PropertyDetails';
 import AgentDashboard from './pages/dashboard/AgentDashboard';
 import PublishListing from './pages/dashboard/PublishListing';
 import MyListing from './pages/dashboard/MyListings';
+import EditProperty from './pages/dashboard/EditProperty'; // <-- NOUVEAU : Import de la page d'édition
 import Archives from './pages/dashboard/Archives';
 import MyFavorites from './pages/dashboard/MyFavorites';
 import Messages from './pages/dashboard/Messages';
@@ -26,16 +27,21 @@ function App() {
           {/* LOGIN : Pas de Navbar ni de Footer */}
           <Route path="/login" element={<Login />} />
 
-          {/* DASHBOARD AGENT : Structure autonome (Sidebar incluse) */}
+          {/* DASHBOARD AGENT */}
           <Route path="/dashboard" element={<AgentDashboard />} />
           <Route path="/publishing" element={<PublishListing />} />
           <Route path="/annonces" element={<MyListing />} />
+          
+          {/* ROUTE DE MODIFICATION : Le ":id" permet de récupérer l'ID dans EditProperty */}
+          <Route path="/dashboard/edit/:id" element={<EditProperty />} /> 
+          
           <Route path="/archives" element={<Archives />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/favoris" element={<MyFavorites />} />
           <Route path="/parametres" element={<Parametres />} />
 
-          <Route path="/details" element={<Details />} />
+          {/* DETAILS PUBLIC */}
+          <Route path="/details/:id" element={<Details />} />
 
           {/* ACCUEIL */}
           <Route

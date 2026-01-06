@@ -9,13 +9,13 @@ const ContactSidebar = ({ price, agent }) => {
             <div className="mb-6">
               <p className="text-sm font-medium text-slate-500">Prix demandé</p>
               <h2 className="text-3xl font-bold text-[#135bec]">1 850 000 €</h2>
-              <p className="text-xs text-slate-400 mt-1">~ 14 800 € / m²</p>
+              <p className="text-xs text-slate-400 mt-1">{price} / m²</p>
             </div>
             <hr className="border-slate-100 mb-6" />
             <div className="mb-6 flex items-center gap-4">
               <img className="size-14 rounded-full object-cover border-2 border-white shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqw3AU1qBZq0uUTTgf0zbY7E0zpq3iMzrBldRoANoCqOWgDCpl4HXeaJofLsU3yrZIGbaUlMOAkuaORou2hDVyWjh9KK6QE4F324uLeHVrO4fUPVUqXdvqF8I79Dh3_ZaVXuDrc4ms9fcT_1eSLQS1_JNfjqtUtT0ymthVUi7hi8_rMV3dhDIekOWHLI6hFzEk2FLcYxr-g1n1BvY4ugu6gzwIfyqEvhSmfM5aLHLKg5AJuqTYdKZmlFH-0pD29rye5LB-NUW09Os1" alt="Agent" />
               <div>
-                <h3 className="font-bold text-slate-900">Thomas Durand</h3>
+                <h3 className="font-bold text-slate-900">{agent.nom}</h3>
                 <p className="text-sm text-slate-500">Agent Expert Paris 16</p>
                 <div className="mt-1 flex gap-1 text-xs text-amber-500">
                   {[1, 2, 3, 4].map(i => <span key={i} className="material-symbols-outlined text-[16px] fill-current">star</span>)}

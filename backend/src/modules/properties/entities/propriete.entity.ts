@@ -9,8 +9,16 @@ import {
 import { Proprietaire } from '../../users/entities/proprietaire.entity';
 import { Photo } from './photo.entity';
 import { Operations } from '../../operations/entities/operations.entity';
+import { Client } from '../../users/entities/client.entity';
 
-// Définition des types autorisés
+// 1. DÉFINITION DES CHOIX (ENUM)
+export enum StatutPropriete {
+  DISPONIBLE = 'Disponible',
+  VENDU = 'Vendu',
+  LOUE = 'Loué',
+  RESERVE = 'Réservé',
+}
+
 export enum TypePropriete {
   APPARTEMENT = 'appartement',
   MAISON = 'maison',
@@ -19,42 +27,34 @@ export enum TypePropriete {
   COMMERCIAL = 'commercial',
 }
 
-// Définition des statuts autorisés
-export enum StatutPropriete {
-  DISPONIBLE = 'Disponible',
-  VENDU = 'Vendu',
-  LOUE = 'Loué',
-  RESERVE = 'Réservé',
-}
-
 @Entity()
-@Index(['statut'])
-@Index(['type'])
-@Index(['proprietaire'])
+@Index(['statut']) // Index présent dans ta base
+@Index(['type']) // Index présent dans ta base
 export class Propriete {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'text' }) // AJOUTÉ : Titre du bien
+  @Column({ type: 'text' })
   titre: string;
 
-  @Column({ type: 'text', nullable: true }) // AJOUTÉ : Description détaillée
+  @Column({ type: 'text', nullable: true })
   description: string;
 
   @Column({
     type: 'text',
     default: TypePropriete.APPARTEMENT,
   })
-  type: TypePropriete;
+  type: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
   prix: number;
 
+  // 2. UTILISATION DE L'ENUM POUR LE STATUT
   @Column({
     type: 'text',
     default: StatutPropriete.DISPONIBLE,
   })
-  statut: StatutPropriete;
+  statut: StatutPropriete; //
 
   @Column({ type: 'text', nullable: true })
   adresse: string;
@@ -65,20 +65,26 @@ export class Propriete {
   @Column('int', { nullable: true })
   nombrePieces: number;
 
-  // Relation vers le module Users
+  // RELATION VERS LE PROPRIÉTAIRE (Table : proprietaire)
   @ManyToOne(() => Proprietaire, (p) => p.proprietes, {
     onDelete: 'SET NULL',
     nullable: true,
   })
-  proprietaire: Proprietaire;
+  proprietaire: Proprietaire; //
 
-  // Relation vers les photos
+  // RELATION VERS LE CLIENT (Table : client)
+  @ManyToOne(() => Client, (c) => c.proprietes, {
+    nullable: true,
+  })
+  client: Client;
+
+  // RELATION VERS LES PHOTOS
   @OneToMany(() => Photo, (photo) => photo.propriete, {
     cascade: true,
   })
   photos: Photo[];
 
-  // Relation vers les opérations
+  // RELATION VERS LES OPÉRATIONS
   @OneToMany(() => Operations, (operation) => operation.propriete)
   operations: Operations[];
 }
