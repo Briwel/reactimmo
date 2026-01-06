@@ -27,6 +27,8 @@ function App() {
           {/* LOGIN : Pas de Navbar ni de Footer */}
           <Route path="/login" element={<Login />} />
 
+          {/**une note */}
+
           {/* DASHBOARD AGENT */}
           <Route path="/dashboard" element={<AgentDashboard />} />
           <Route path="/publishing" element={<PublishListing />} />
