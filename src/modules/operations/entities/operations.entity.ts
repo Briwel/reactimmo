@@ -4,8 +4,8 @@ import {
   Column,
   ManyToOne,
   OneToOne,
-  Index,
 } from 'typeorm';
+import { Client } from '../../users/entities/client.entity';
 import { Propriete } from '../../properties/entities/propriete.entity';
 import { Contrat } from './contrat.entity';
 
@@ -14,41 +14,23 @@ export enum TypeOperation {
   LOCATION = 'location',
 }
 
-export enum StatutOperation {
-  EN_COURS = 'en_cours',
-  TERMINE = 'termine',
-  ANNULE = 'annule',
-}
-
 @Entity()
-@Index(['type'])
-@Index(['statut'])
-@Index(['propriete'])
-@Index(['dateOperation'])
 export class Operations {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({
-    type: 'text',
-    default: TypeOperation.VENTE,
-  })
+  @Column({ type: 'simple-enum', enum: TypeOperation })
   type: TypeOperation;
 
-  @Column('decimal', { precision: 10, scale: 2 })
-  montant: number;
+  @Column('float')
+  montantFinal: number;
 
-  @Column({ type: 'date' })
-  dateOperation: Date;
-
-  @Column({
-    type: 'text',
-    default: StatutOperation.EN_COURS,
-  })
-  statut: StatutOperation;
+  // IL EST CRUCIAL D'AJOUTER CES DÉCORATEURS @ManyToOne
+  @ManyToOne(() => Client, (client) => client.operations, { nullable: false })
+  client: Client;
 
   @ManyToOne(() => Propriete, (propriete) => propriete.operations, {
-    onDelete: 'CASCADE',
+    nullable: false,
   })
   propriete: Propriete;
 

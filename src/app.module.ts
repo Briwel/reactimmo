@@ -7,6 +7,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from './modules/users/users.module';
 import { PropertiesModule } from './modules/properties/properties.module';
 import { OperationsModule } from './modules/operations/operations.module';
+import { OperationsService } from './modules/operations/operations.service';
+import { OperationsController } from './modules/operations/operations.controller';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -19,15 +24,24 @@ import { OperationsModule } from './modules/operations/operations.module';
 
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: process.env.DATABASE_PATH || 'db_immobilier.sqlite',
+      database: 'db_immobilier.sqlite',
+      // On importe explicitement les classes pour être sûr que TypeORM les voit au démarrage
+      entities: [join(__dirname, '**', '*.entity.{ts,js}')],
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production',
-      logging: process.env.NODE_ENV === 'development',
+      synchronize: true, // Très important pour SQLite en développement
+      logging: true,
     }),
-
+    AuthModule,
     UsersModule,
     PropertiesModule,
     OperationsModule,
+
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', '/backend/uploads'), // Chemin vers ton dossier d'images
+      serveRoot: '/backend/uploads', // URL de base pour accéder aux images
+    }),
+
+    AuthModule,
   ],
   providers: [
     // Activation globale du ThrottlerGuard
@@ -35,6 +49,8 @@ import { OperationsModule } from './modules/operations/operations.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    OperationsService,
   ],
+  controllers: [OperationsController],
 })
 export class AppModule {}

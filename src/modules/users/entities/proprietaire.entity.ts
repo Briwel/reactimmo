@@ -4,8 +4,10 @@ import {
   Column,
   OneToMany,
   Index,
+  ManyToOne,
 } from 'typeorm';
 import { Propriete } from '../../properties/entities/propriete.entity';
+import { User } from 'src/auth/user.entity';
 
 @Entity()
 @Index(['email'])
@@ -31,4 +33,7 @@ export class Proprietaire {
 
   @OneToMany(() => Propriete, (propriete) => propriete.proprietaire)
   proprietes: Propriete[];
+
+  @ManyToOne(() => User, (user) => user.proprietes)
+  user: User; // C'est ce champ "user" qui cause l'erreur
 }
