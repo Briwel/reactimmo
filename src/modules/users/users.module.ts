@@ -5,14 +5,15 @@ import { Proprietaire } from './entities/proprietaire.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { AuthModule } from '../../auth/auth.module';
+import { User } from '../../auth/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Client, Proprietaire]),
+    TypeOrmModule.forFeature([Client, Proprietaire, User]),
     forwardRef(() => AuthModule),
   ],
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [TypeOrmModule, UsersService], // Permet à d'autres modules d'utiliser ces entités et le service
+  exports: [TypeOrmModule, UsersService],
 })
 export class UsersModule {}

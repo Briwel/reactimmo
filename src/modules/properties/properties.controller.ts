@@ -8,81 +8,99 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFiles,
+  UseGuards,
+  Req,
   Patch,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { PropertiesService } from './properties.service';
+import { AuthGuard } from '@nestjs/passport';
 import { CreatePropertyDto } from './dto/create-property.dto';
+import { Propriete } from './entities/propriete.entity';
+
+const multerConfig = {
+  storage: diskStorage({
+    destination: './uploads',
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+    },
+  }),
+};
+
+interface RequestWithUser extends Request {
+  user: { id: number; email: string };
+}
 
 @Controller('properties')
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
-  /**
-   * ROUTE PRINCIPALE : Création d'un bien avec images
-   * Cette route capte les requêtes POST vers /api/properties
-   */
   @Post()
-  @UseInterceptors(
-    FilesInterceptor('images', 10, {
-      // 'images' doit correspondre à la clé utilisée dans React
-      storage: diskStorage({
-        destination: './uploads', // Dossier où les photos seront stockées
-        filename: (req, file, cb) => {
-          // Génération d'un nom unique : timestamp + nombre aléatoire
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-        },
-      }),
-    }),
-  )
-  create(
-    @Body() createPropertyDto: CreatePropertyDto,
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FilesInterceptor('images', 10, multerConfig))
+  async create(
+    @Body() dto: CreatePropertyDto,
     @UploadedFiles() files: Express.Multer.File[],
-  ) {
-    // On extrait les noms des fichiers enregistrés
-    const filenames = files?.map((f) => f.filename) || [];
-    // On appelle la méthode unifiée du service qui gère texte + photos
-    return this.propertiesService.createWithPhotos(
-      createPropertyDto,
-      filenames,
-    );
+    @Req() req: RequestWithUser,
+  ): Promise<Propriete> {
+    // On envoie directement 'files' et 'req.user.id' au service
+    return this.propertiesService.createWithPhotos(dto, files, req.user.id);
   }
 
   @Get()
-  async getAll() {
+  async findAll(): Promise<Propriete[]> {
     return this.propertiesService.findAll();
   }
 
+  // Endpoint to receive contact messages for a property
+  @Post(':id/contact')
+  async contactAgent(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
+    return this.propertiesService.contactAgent(id, body);
+  }
+
+  // Endpoint to request a visit/reservation
+  @Post(':id/reserve')
+  async reserveVisit(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
+    return this.propertiesService.reserveVisit(id, body);
+  }
+
+  @Get('mine')
+  @UseGuards(AuthGuard('jwt'))
+  async findAllMine(@Req() req: RequestWithUser): Promise<Propriete[]> {
+    return this.propertiesService.findManyByUser(req.user.id);
+  }
+
   @Get(':id')
-  async getOne(@Param('id', ParseIntPipe) id: number) {
-    // Vérifie que findOne existe dans ton service
+  async getOne(@Param('id', ParseIntPipe) id: number): Promise<Propriete> {
     return this.propertiesService.findOne(id);
   }
 
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    // Vérifie que remove existe dans ton service
+  @UseGuards(AuthGuard('jwt'))
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<Propriete> {
     return this.propertiesService.remove(id);
   }
 
+  @Patch(':id/status')
+  @UseGuards(AuthGuard('jwt'))
+  async updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: string,
+  ): Promise<Propriete> {
+    return this.propertiesService.updateStatus(id, status);
+  }
+
   @Patch(':id')
-  @UseInterceptors(
-    FilesInterceptor('images', 10, {
-      storage: diskStorage({
-        /* ... ta config ... */
-      }),
-    }),
-  )
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FilesInterceptor('images', 10, multerConfig))
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updatePropertyDto: any, // Il recevra les champs texte ici
-    @UploadedFiles() files: Express.Multer.File[], // Il recevra les fichiers ici
-  ) {
-    const filenames = files?.map((f) => f.filename) || [];
-    return this.propertiesService.update(id, updatePropertyDto, filenames);
+    @Body() dto: CreatePropertyDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<Propriete> {
+    return this.propertiesService.update(id, dto, files);
   }
 }

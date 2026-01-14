@@ -4,87 +4,74 @@ import {
   Column,
   ManyToOne,
   OneToMany,
-  Index,
 } from 'typeorm';
 import { Proprietaire } from '../../users/entities/proprietaire.entity';
 import { Photo } from './photo.entity';
 import { Operations } from '../../operations/entities/operations.entity';
-import { Client } from '../../users/entities/client.entity';
 
-// 1. DÉFINITION DES CHOIX (ENUM)
 export enum StatutPropriete {
   DISPONIBLE = 'Disponible',
-  VENDU = 'Vendu',
   LOUE = 'Loué',
-  RESERVE = 'Réservé',
-}
-
-export enum TypePropriete {
-  APPARTEMENT = 'appartement',
-  MAISON = 'maison',
-  VILLA = 'villa',
-  STUDIO = 'studio',
-  COMMERCIAL = 'commercial',
+  VENDU = 'Vendu',
 }
 
 @Entity()
-@Index(['statut']) // Index présent dans ta base
-@Index(['type']) // Index présent dans ta base
 export class Propriete {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'text' })
+  @Column()
   titre: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description: string | null;
 
-  @Column({
-    type: 'text',
-    default: TypePropriete.APPARTEMENT,
-  })
-  type: string;
-
-  @Column('decimal', { precision: 10, scale: 2 })
-  prix: number;
-
-  // 2. UTILISATION DE L'ENUM POUR LE STATUT
-  @Column({
-    type: 'text',
-    default: StatutPropriete.DISPONIBLE,
-  })
-  statut: StatutPropriete; //
-
-  @Column({ type: 'text', nullable: true })
+  @Column()
   adresse: string;
 
-  @Column('decimal', { precision: 8, scale: 2, nullable: true })
-  superficie: number;
+  @Column()
+  type: string;
 
-  @Column('int', { nullable: true })
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: {
+      to: (value?: number) => (value === undefined ? null : value),
+      from: (value: string | null) => (value === null ? null : Number(value)),
+    },
+  })
+  prix: number;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: {
+      to: (value?: number | null) => (value === undefined ? null : value),
+      from: (value: string | null) => (value === null ? null : Number(value)),
+    },
+  })
+  superficie: number | null;
+
+  @Column('int')
   nombrePieces: number;
 
-  // RELATION VERS LE PROPRIÉTAIRE (Table : proprietaire)
-  @ManyToOne(() => Proprietaire, (p) => p.proprietes, {
-    onDelete: 'SET NULL',
-    nullable: true,
-  })
-  proprietaire: Proprietaire; //
+  @Column({ type: 'text', nullable: true })
+  contratClauses: string | null;
 
-  // RELATION VERS LE CLIENT (Table : client)
-  @ManyToOne(() => Client, (c) => c.proprietes, {
-    nullable: true,
+  @Column({
+    type: 'text',
+    enum: StatutPropriete,
+    default: StatutPropriete.DISPONIBLE,
   })
-  client: Client;
+  statut: StatutPropriete;
 
-  // RELATION VERS LES PHOTOS
-  @OneToMany(() => Photo, (photo) => photo.propriete, {
-    cascade: true,
-  })
+  @ManyToOne(() => Proprietaire, (p) => p.proprietes)
+  proprietaire: Proprietaire;
+
+  @OneToMany(() => Photo, (photo) => photo.propriete)
   photos: Photo[];
 
-  // RELATION VERS LES OPÉRATIONS
-  @OneToMany(() => Operations, (operation) => operation.propriete)
+  @OneToMany(() => Operations, (op) => op.propriete)
   operations: Operations[];
 }

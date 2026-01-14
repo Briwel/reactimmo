@@ -1,24 +1,30 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // 1. Initialisation avec NestExpressApplication pour le support statique
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // 1. CONFIGURATION DU CORS
-  // Permet à ton frontend React (port 5173) de parler au backend (port 3000)
+  // 2. CONFIGURATION DU CORS
   app.enableCors({
-    origin: 'http://localhost:5173', // L'URL de ton frontend React
+    origin: 'http://localhost:5173', // Votre port React par défaut
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
-  // 2. PRÉFIXE GLOBAL
-  // Toutes tes routes commenceront par /api (ex: /api/properties)
+  // 3. PRÉFIXE GLOBAL (Toutes les routes d'API seront sous /api/...)
   app.setGlobalPrefix('api');
 
-  // 3. VALIDATION GLOBALE
-  // Active la vérification automatique des données envoyées (DTOs)
+  // 4. SERVICE DES FICHIERS STATIQUES (Indispensable pour vos photos)
+  // Les images seront accessibles via : http://localhost:3000/uploads/nom_image.jpg
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
+
+  // 5. VALIDATION GLOBALE (DTOs)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -29,6 +35,11 @@ async function bootstrap() {
 
   const port = 3000;
   await app.listen(port);
-  console.log(`🚀 Serveur démarré sur : http://localhost:${port}/api`);
+
+  console.log(`\n🚀 Serveur démarré sur : http://localhost:${port}/api`);
+  console.log(
+    `🖼️  Dossier images servi sur : http://localhost:${port}/uploads/\n`,
+  );
 }
+
 void bootstrap();

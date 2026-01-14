@@ -4,14 +4,25 @@ import {
   Column,
   ManyToOne,
   OneToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Client } from '../../users/entities/client.entity';
 import { Propriete } from '../../properties/entities/propriete.entity';
 import { Contrat } from './contrat.entity';
 
+// Types d'opérations possibles
 export enum TypeOperation {
   VENTE = 'vente',
   LOCATION = 'location',
+  RESERVATION = 'reservation',
+}
+
+// Statut de l'opération (workflow)
+export enum StatutOperation {
+  EN_ATTENTE = 'en_attente',
+  TERMINE = 'termine',
+  ANNULE = 'annule',
 }
 
 @Entity()
@@ -22,10 +33,24 @@ export class Operations {
   @Column({ type: 'simple-enum', enum: TypeOperation })
   type: TypeOperation;
 
-  @Column('float')
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: {
+      to: (value?: number) => (value === undefined ? null : value),
+      from: (value: string | null) => (value === null ? null : Number(value)),
+    },
+  })
   montantFinal: number;
 
-  // IL EST CRUCIAL D'AJOUTER CES DÉCORATEURS @ManyToOne
+  @Column({
+    type: 'simple-enum',
+    enum: StatutOperation,
+    default: StatutOperation.EN_ATTENTE,
+  })
+  statut: StatutOperation;
+
   @ManyToOne(() => Client, (client) => client.operations, { nullable: false })
   client: Client;
 
@@ -36,4 +61,10 @@ export class Operations {
 
   @OneToOne(() => Contrat, (contrat) => contrat.operation)
   contrat: Contrat;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
