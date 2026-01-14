@@ -3,37 +3,37 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-  Index,
-  ManyToOne,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Propriete } from '../../properties/entities/propriete.entity';
-import { User } from 'src/auth/user.entity';
+import { User } from '../../../auth/user.entity';
+import { Notification } from '../../notifications/notification.entity';
 
 @Entity()
-@Index(['email'])
-@Index(['nom', 'prenom'])
 export class Proprietaire {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'text' })
+  @Column()
   nom: string;
 
-  @Column({ type: 'text' })
+  @Column()
   prenom: string;
 
-  @Column({ type: 'text', unique: true })
-  email: string;
-
-  @Column({ type: 'text' })
+  @Column()
   telephone: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ nullable: true })
   adresse: string;
 
-  @OneToMany(() => Propriete, (propriete) => propriete.proprietaire)
+  @OneToOne(() => User, (user) => user.proprietaire)
+  @JoinColumn()
+  user: User;
+
+  @OneToMany(() => Propriete, (p) => p.proprietaire)
   proprietes: Propriete[];
 
-  @ManyToOne(() => User, (user) => user.proprietes)
-  user: User; // C'est ce champ "user" qui cause l'erreur
+  @OneToMany(() => Notification, (n) => n.proprietaire)
+  notifications: Notification[];
 }

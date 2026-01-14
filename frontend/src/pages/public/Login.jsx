@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useUser } from '../../context/UserContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import GoogleLogo from '../../assets/google.png'
-import FacebookLogo from '../../assets/facebook.png'
-import Immeuble from '../../assets/immeuble.jpeg'
+import GoogleLogo from '../../assets/google.png';
+import FacebookLogo from '../../assets/facebook.png';
+import Immeuble from '../../assets/immeuble.jpeg';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ export default function Login() {
     setIsLogin(params.get('mode') !== 'signup');
   }, [location.search]);
 
+  const { setUser } = useUser();
+
   // --- Logique de connexion / inscription ---
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -37,7 +40,11 @@ export default function Login() {
         // Connexion
         const res = await axios.post("http://localhost:3000/api/auth/login", { email, password });
         localStorage.setItem("token", res.data.access_token);
+        // Stocker l'objet user pour affichages futurs
+        localStorage.setItem("user_info", JSON.stringify(res.data.user || null));
         localStorage.setItem("user_name", res.data.user?.prenom || "Utilisateur");
+        // Mettre à jour le contexte immédiatement
+        setUser(res.data.user || null);
         navigate('/dashboard');
       } else {
         // Inscription avec Nom, Prénom, Téléphone

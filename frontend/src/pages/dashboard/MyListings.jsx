@@ -6,153 +6,179 @@ import axios from 'axios';
 
 const MyListings = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('Toutes');
-    const [searchQuery, setSearchQuery] = useState("");
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('Tous'); // Filtre : Tous, Disponible, Vendu, Loué
+    const [actionError, setActionError] = useState(null);
+    const [actionSuccess, setActionSuccess] = useState(null);
 
-    // 1. Récupération des données du Backend au chargement
+    const normalize = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+
     useEffect(() => {
         fetchProperties();
     }, []);
 
     const fetchProperties = async () => {
         try {
-            setLoading(true);
             const token = localStorage.getItem('token');
-            // Appel vers ton API NestJS (prefixée par /api)
-            const response = await axios.get('http://localhost:3000/api/properties', {
+            const response = await axios.get('http://localhost:3000/api/properties/mine', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setListings(response.data);
         } catch (error) {
-            console.error("Erreur lors du chargement des biens:", error);
+            console.error("Erreur de chargement:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    // 2. Fonction pour supprimer un bien
     const handleDelete = async (id) => {
-        if (window.confirm("Voulez-vous vraiment supprimer cette annonce ?")) {
+        if (window.confirm("Supprimer définitivement cette annonce et son contrat ?")) {
             try {
                 const token = localStorage.getItem('token');
                 await axios.delete(`http://localhost:3000/api/properties/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setListings(listings.filter(item => item.id !== id));
-                alert("Annonce supprimée avec succès.");
             } catch (error) {
-                console.error("Erreur suppression:", error);
-                alert("Impossible de supprimer ce bien.");
+                console.error("Erreur lors de la suppression:", error);
             }
         }
     };
 
-    // Filtrage des annonces selon l'onglet et la recherche
+    const handleConfirm = async (propertyId, typeOperation) => {
+        setActionError(null);
+        setActionSuccess(null);
+        try {
+            const pendingRes = await axios.get(`http://localhost:3000/api/operations/property/${propertyId}`);
+            const pending = (pendingRes.data || []).find(op => op.statut === 'en_attente');
+            if (!pending) {
+                setActionError("Aucune opération en attente pour ce bien.");
+                return;
+            }
+            await axios.patch(`http://localhost:3000/api/operations/${pending.id}/confirmer`, {
+                typeOperation,
+            });
+            setActionSuccess('Opération confirmée.');
+            // rafraîchir la liste
+            fetchProperties();
+        } catch (err) {
+            setActionError(err?.response?.data?.message || err.message || 'Erreur lors de la confirmation');
+        }
+    };
+
     const filteredListings = listings.filter(item => {
-        const matchesTab = activeTab === 'Toutes' || item.statut === activeTab;
-        const matchesSearch = item.titre?.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesTab && matchesSearch;
+        if (filter === 'Tous') return true;
+        const norm = normalize(item.statut);
+        return norm === normalize(filter);
     });
 
     return (
-        <div className="flex h-screen w-full bg-[#f6f6f8] font-display text-slate-900 overflow-hidden">
+        <div className="flex h-screen bg-[#f6f6f8]">
             <Sidebar activePage="listings" />
-
-            <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden">
                 <DashboardHeader title="Mes Annonces" />
-
-                <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                    <div className="mx-auto max-w-6xl">
+                
+                <main className="flex-1 overflow-y-auto p-8">
+                    <div className="max-w-7xl mx-auto">
                         
-                        {/* BARRE D'OUTILS */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                            <div className="flex p-1 bg-slate-200/50 rounded-xl w-fit">
-                                {['Toutes', 'Disponible', 'Vendu', 'Loué'].map((tab) => (
+                        {/* Barre d'outils et Filtres */}
+                        <div className="flex justify-between items-center mb-8">
+                            <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-slate-100">
+                                {['Tous', 'Disponible', 'Vendu', 'Loué'].map((tab) => (
                                     <button
                                         key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                            activeTab === tab ? 'bg-white text-[#135bec] shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                        onClick={() => setFilter(tab)}
+                                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                            filter === tab ? 'bg-[#135bec] text-white' : 'text-slate-400 hover:text-slate-600'
                                         }`}
                                     >
                                         {tab}
                                     </button>
                                 ))}
                             </div>
-                            
-                            <div className="relative group">
-                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#135bec] transition-colors">search</span>
-                                <input 
-                                    type="text" 
-                                    placeholder="RECHERCHER UN BIEN..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:border-[#135bec] w-full md:w-80 transition-all shadow-sm"
-                                />
-                            </div>
+                            <button 
+                                onClick={() => navigate('/publishing')}
+                                className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 hover:bg-slate-800 transition-all"
+                            >
+                                <span className="material-symbols-outlined text-sm">add</span>
+                                Nouveau Bien
+                            </button>
                         </div>
 
                         {loading ? (
-                            <div className="flex justify-center py-20">
-                                <div className="animate-spin size-8 border-4 border-[#135bec] border-t-transparent rounded-full"></div>
-                            </div>
+                            <div className="py-20 text-center font-black text-slate-300 animate-pulse uppercase tracking-widest">Chargement de vos biens...</div>
                         ) : (
                             <div className="grid grid-cols-1 gap-4">
-                                {filteredListings.length > 0 ? filteredListings.map((item) => (
-                                    <div key={item.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-all group">
-                                        {/* Image (placeholder si vide) */}
-                                        <div className="w-full md:w-48 h-32 bg-slate-100 rounded-2xl overflow-hidden shrink-0">
+                                {actionError && <div className="text-sm text-red-600">{actionError}</div>}
+                                {actionSuccess && <div className="text-sm text-emerald-600">{actionSuccess}</div>}
+                                {filteredListings.map((item) => (
+                                    <div key={item.id} className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center gap-6">
+                                        {/* Miniature */}
+                                        <div className="size-24 rounded-[24px] bg-slate-100 overflow-hidden shrink-0">
                                             <img 
-                                                src={item.photos?.[0]?.url || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=400"} 
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                src={item.photos?.[0] ? `http://localhost:3000/uploads/${item.photos[0].url}` : 'https://via.placeholder.com/150'} 
+                                                className="w-full h-full object-cover"
                                                 alt={item.titre}
                                             />
                                         </div>
 
-                                        <div className="flex-1 flex flex-col justify-between py-1">
-                                            <div>
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">{item.titre}</h3>
-                                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                                                        item.statut === 'Disponible' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                                                    }`}>
-                                                        {item.statut}
-                                                    </span>
-                                                </div>
-                                                <p className="text-slate-400 text-xs font-bold flex items-center gap-1 uppercase mb-3">
-                                                    <span className="material-symbols-outlined text-sm">location_on</span> {item.adresse}
-                                                </p>
-                                                
-                                                <div className="flex gap-4">
-                                                    <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                                                        <span className="material-symbols-outlined text-lg">square_foot</span>
-                                                        <span className="text-[10px] font-black uppercase">{item.superficie} m²</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                                                        <span className="material-symbols-outlined text-lg">meeting_room</span>
-                                                        <span className="text-[10px] font-black uppercase">{item.nombrePieces} Pièces</span>
-                                                    </div>
-                                                </div>
+                                        {/* Infos */}
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`size-2 rounded-full ${item.statut?.toLowerCase() === 'vendu' ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                                                <h4 className="font-black text-slate-900 uppercase text-sm tracking-tight">{item.titre}</h4>
                                             </div>
-
-                                            <div className="mt-4 md:mt-0 flex items-center justify-between">
-                                                <p className="text-[#135bec] text-xl font-black italic">{item.prix.toLocaleString()} €</p>
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => navigate(`/dashboard/edit/${item.id}`)} className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:text-[#135bec] hover:bg-blue-50 transition-all">
-                                                        <span className="material-symbols-outlined">edit</span>
-                                                    </button>
-                                                    <button onClick={() => handleDelete(item.id)} className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all">
-                                                        <span className="material-symbols-outlined">delete</span>
-                                                    </button>
+                                            <p className="text-slate-400 text-xs font-bold mb-2">{item.adresse}</p>
+                                            
+                                            {/* Badge Contrat */}
+                                            <div className="flex items-center gap-3">
+                                                <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-[9px] font-black uppercase ${item.contrat ? 'bg-blue-50 text-[#135bec]' : 'bg-amber-50 text-amber-600'}`}>
+                                                    <span className="material-symbols-outlined text-[12px]">{item.contrat ? 'description' : 'warning'}</span>
+                                                    {item.contrat ? 'Contrat Prêt' : 'Pas de contrat'}
                                                 </div>
+                                                <span className="text-slate-300 text-[10px]">|</span>
+                                                <span className="text-[#135bec] font-black text-sm">{parseFloat(item.prix).toLocaleString()} €</span>
                                             </div>
                                         </div>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-2 pr-4">
+                                            <button 
+                                                onClick={() => navigate(`/dashboard/edit/${item.id}`)}
+                                                className="size-12 rounded-2xl bg-slate-50 text-slate-400 hover:text-[#135bec] hover:bg-blue-50 transition-all flex items-center justify-center"
+                                                title="Modifier"
+                                            >
+                                                <span className="material-symbols-outlined">edit_note</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleConfirm(item.id, 'vente')}
+                                                className="size-12 rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 transition-all flex items-center justify-center"
+                                                title="Vendre"
+                                            >
+                                                <span className="material-symbols-outlined">sell</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleConfirm(item.id, 'location')}
+                                                className="size-12 rounded-2xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all flex items-center justify-center"
+                                                title="Louer"
+                                            >
+                                                <span className="material-symbols-outlined">key</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(item.id)}
+                                                className="size-12 rounded-2xl bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center"
+                                                title="Supprimer"
+                                            >
+                                                <span className="material-symbols-outlined">delete</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                )) : (
-                                    <div className="py-20 text-center bg-white rounded-3xl border-2 border-dashed border-gray-100">
-                                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Aucun bien trouvé</p>
+                                ))}
+
+                                {filteredListings.length === 0 && (
+                                    <div className="py-20 text-center bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-200">
+                                        <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Aucune annonce dans cette catégorie</p>
                                     </div>
                                 )}
                             </div>

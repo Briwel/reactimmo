@@ -29,7 +29,7 @@ export class Contrat {
   dateDebut: Date;
 
   @Column({ type: 'date', nullable: true })
-  dateFin: Date;
+  dateFin: Date | null;
 
   @Column('decimal', { precision: 10, scale: 2 })
   montant: number;

@@ -2,13 +2,26 @@ import React, { useState } from 'react'; // 1. Import de useState
 import { Link } from "react-router-dom";
 
 export default function NavbarResults() {
-  // 2. État pour gérer l'affichage du menu
+  // 2. États pour gérer l'affichage du menu et du menu mobile
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Exemple de données (pourrait venir d'un Context ou Redux)
   const notifications = [
     { id: 1, text: "Produit ajouté aux favoris", detail: "Appartement T3 - Lyon", time: "À l'instant", icon: "favorite" }
   ];
+
+  // Fermer le menu sur Escape
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setIsMenuOpen(false);
+        setIsNotifOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
@@ -39,11 +52,22 @@ export default function NavbarResults() {
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation (desktop) */}
           <div className="hidden xl:flex items-center gap-6">
             <a className="text-gray-900 text-sm font-medium hover:text-black" href="#">Acheter</a>
             <a className="text-gray-600 text-sm font-medium hover:text-black" href="#">Louer</a>
             <a className="text-gray-600 text-sm font-medium hover:text-black" href="#">Vendre</a>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="flex xl:hidden items-center">
+            <button
+              aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              onClick={() => setIsMenuOpen((s) => !s)}
+              className="p-2 rounded-md text-gray-600 hover:bg-gray-100"
+            >
+              <span className="material-symbols-outlined">{isMenuOpen ? 'close' : 'menu'}</span>
+            </button>
           </div>
 
           {/* Actions utilisateur */}
@@ -96,6 +120,26 @@ export default function NavbarResults() {
 
         </div>
       </div>
+
+      {/* Mobile menu panel */}
+      {isMenuOpen && (
+        <div className="xl:hidden bg-white border-t border-gray-100 shadow-sm">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex flex-col gap-3">
+              <input className="block w-full pl-3 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 text-gray-900 sm:text-sm" placeholder="Paris, Lyon, Marseille..." type="text" />
+              <nav className="flex flex-col gap-2">
+                <a className="px-3 py-2 rounded-md text-gray-900 font-medium hover:bg-gray-50" href="#">Acheter</a>
+                <a className="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-50" href="#">Louer</a>
+                <a className="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-50" href="#">Vendre</a>
+              </nav>
+              <div className="pt-2 flex gap-2">
+                <Link to="/Login" className="flex-1 text-center px-4 py-2 rounded-lg border bg-white text-gray-900 font-medium">Se connecter</Link>
+                <Link to="/login?mode=signup" className="flex-1 text-center px-4 py-2 rounded-lg bg-black text-white font-bold">S'inscrire</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

@@ -1,10 +1,10 @@
 
-export default function SearchCard({ price, title, loc, img, exclusive, tag, favorite, agency, isPrivate }) {
+export default function SearchCard({ prix, titre, adresse, img, exclusive, tag, favorite, agency, isPrivate }) {
     return (
       <div className="group bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300">
-        <a href="/details">
+        <div>
         <div className="relative h-56 overflow-hidden">
-          <img src={img} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={img} alt={titre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           <div className="absolute top-3 right-3">
             <button className={`size-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm transition-colors ${favorite ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}>
               <span className={`material-symbols-outlined !text-[20px] ${favorite ? 'fill-current' : ''}`}>favorite</span>
@@ -21,11 +21,11 @@ export default function SearchCard({ price, title, loc, img, exclusive, tag, fav
   
         <div className="p-5">
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-2xl font-bold text-primary">{price}</h3>
+            <h3 className="text-2xl font-bold text-primary">{prix}</h3>
             <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Vente</span>
           </div>
-          <h4 className="text-gray-900 font-semibold mb-1 truncate">{title}</h4>
-          <p className="text-gray-500 text-sm mb-4 truncate">{loc}</p>
+          <h4 className="text-gray-900 font-semibold mb-1 truncate">{titre}</h4>
+          <p className="text-gray-500 text-sm mb-4 truncate">{adresse}</p>
           
           <div className="flex items-center gap-4 mb-5 border-t border-gray-100 pt-4">
             <div className="flex items-center gap-1.5 text-gray-600 text-sm">
@@ -51,7 +51,7 @@ export default function SearchCard({ price, title, loc, img, exclusive, tag, fav
             </button>
           </div>
         </div>
-        </a>
+        </div>
       </div>
     );
   }

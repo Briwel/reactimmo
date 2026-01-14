@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import {
+  ThrottlerModule,
+  ThrottlerGuard,
+  ThrottlerModuleOptions,
+} from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
 // Importation des modules métier
@@ -12,15 +16,13 @@ import { OperationsController } from './modules/operations/operations.controller
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 10,
-      },
-    ]),
+    ThrottlerModule.forRoot({
+      throttlers: [{ ttl: 60, limit: 10 }],
+    } as ThrottlerModuleOptions),
 
     TypeOrmModule.forRoot({
       type: 'sqlite',
@@ -35,13 +37,13 @@ import { AuthModule } from './auth/auth.module';
     UsersModule,
     PropertiesModule,
     OperationsModule,
-
+    // Notifications module provides notification endpoints and DB entity
+    NotificationsModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', '/backend/uploads'), // Chemin vers ton dossier d'images
-      serveRoot: '/backend/uploads', // URL de base pour accéder aux images
+      // Serve files from the backend/uploads directory at /uploads
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
     }),
-
-    AuthModule,
   ],
   providers: [
     // Activation globale du ThrottlerGuard

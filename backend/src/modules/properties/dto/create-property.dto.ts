@@ -6,9 +6,9 @@ import {
   Min,
   IsNotEmpty,
 } from 'class-validator';
-import { Type } from 'class-transformer'; // Indispensable pour la conversion
+import { Type } from 'class-transformer';
 
-// Définis proprement les types autorisés
+// On définit les types pour la validation IsEnum
 export enum PropertyType {
   APPARTEMENT = 'appartement',
   MAISON = 'maison',
@@ -19,32 +19,41 @@ export enum PropertyType {
 
 export class CreatePropertyDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Le titre est obligatoire' })
   titre: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
 
-  @Type(() => Number) // Convertit le texte "2500" en nombre 2500
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   prix: number;
 
-  @IsEnum(PropertyType) // Utilise l'Enum définie plus haut
+  @IsEnum(PropertyType, { message: 'Type de bien invalide' })
+  @IsNotEmpty()
   type: string;
 
   @IsString()
-  @IsOptional()
-  adresse?: string;
+  @IsNotEmpty()
+  adresse: string;
 
-  @Type(() => Number) // Conversion auto
-  @IsNumber()
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
   superficie?: number;
 
-  @Type(() => Number) // Conversion auto
-  @IsNumber()
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
   nombrePieces?: number;
+
+  @IsOptional()
+  @IsString()
+  contratClauses?: string;
+
+  @IsOptional()
+  @IsString()
+  proprietaireId?: string;
 }

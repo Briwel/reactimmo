@@ -1,24 +1,15 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateClientDto {
-  @IsString()
-  @IsNotEmpty({ message: 'Le nom est obligatoire' })
+  @IsNotEmpty()
   nom: string;
 
-  @IsString()
   @IsNotEmpty()
   prenom: string;
 
-  @IsString()
-  @IsNotEmpty()
-  telephone: string;
-
-  @IsEmail({}, { message: "L'adresse email est invalide" })
+  @IsEmail()
   email: string;
 
-  @IsString()
-  @MinLength(6, {
-    message: 'Le mot de passe doit contenir au moins 6 caractères',
-  })
-  password: string;
+  @IsOptional()
+  telephone?: string;
 }
