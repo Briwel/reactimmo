@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Sidebar } from '../../components/dashboard/Sidebar';
 import { DashboardHeader } from '../../components/dashboard/DashboardHeader';
 import { StatCard } from '../../components/dashboard/StatCard';
-import { useNavigate } from 'react-router-dom'; // Ajout pour la redirection
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { useAgentListings } from '../../hooks/useAgentListings';
 import axios from 'axios';
@@ -19,10 +19,8 @@ const AgentDashboard = () => {
     const [clientLoading, setClientLoading] = useState(false);
     const [clientError, setClientError] = useState(null);
 
-    // Hook de synchronisation temps réel + initial fetch
     const { listings, loading } = useAgentListings();
 
-    // Redirection si pas d'utilisateur et le contexte a fini de charger
     useEffect(() => {
         if (!user && !userLoading) {
             navigate('/login');
@@ -83,16 +81,14 @@ const AgentDashboard = () => {
         }
     };
 
-    // --- CALCUL DES STATISTIQUES RÉELLES (Maintenant uniques à l'agent) ---
     const totalProperties = (listings || []).length;
     const normalize = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
     const soldProperties = (listings || []).filter(item => ['vendu','loue'].includes(normalize(item.statut))).length;
     
     const totalValue = (listings || []).reduce((acc, item) => acc + (parseFloat(item.prix) || 0), 0);
 
-    // Tri par date pour les récentes
     const recentListings = [...listings]
-        .sort((a, b) => new Date(b.id) - new Date(a.id)) // Utilise createdAt si disponible
+        .sort((a, b) => new Date(b.id) - new Date(a.id)) 
         .slice(0, 5);
 
     if (loading) {
@@ -113,7 +109,7 @@ const AgentDashboard = () => {
             <Sidebar activePage="dashboard" />
             
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header avec le nom de l'agent connecté */}
+
                 <DashboardHeader title={`Espace de ${user?.prenom || 'Agent'}`} />
                 
                 <main className="flex-1 overflow-y-auto p-8">

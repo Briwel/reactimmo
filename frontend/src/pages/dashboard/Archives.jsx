@@ -14,7 +14,7 @@ const Archives = () => {
         const response = await axios.get('http://localhost:3000/api/properties/mine', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        // On ne garde que les biens vendus ou loués
+
         const normalize = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
         const archived = response.data.filter(item => ['vendu','loue'].includes(normalize(item.statut)));
         setArchivedListings(archived);

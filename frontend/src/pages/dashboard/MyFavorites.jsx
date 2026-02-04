@@ -12,12 +12,11 @@ const MyFavorites = () => {
     const fetchFavorites = async () => {
       try {
         const token = localStorage.getItem('token');
-        // On récupère les biens. Plus tard, tu pourras filtrer par /api/favorites
+
         const response = await axios.get('http://localhost:3000/api/properties/mine', {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        // Simulation : on affiche les biens comme étant en favoris
         setFavorites(response.data);
       } catch (error) {
         console.error("Erreur favoris:", error);

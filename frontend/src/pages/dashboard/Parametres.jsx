@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../../components/dashboard/Sidebar';
 import { DashboardHeader } from '../../components/dashboard/DashboardHeader';
-import { useUser } from '../../context/UserContext'; // Import du Hook
+import { useUser } from '../../context/UserContext'; 
 import axios from 'axios';
 
 const Settings = () => {
-  // On récupère refreshUser du contexte pour synchroniser la Sidebar
   const { user, refreshUser } = useUser();
   
   const [profile, setProfile] = useState({ 
@@ -18,7 +17,6 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  // Initialisation des données avec celles du contexte
   useEffect(() => {
     if (user) {
       setProfile({
@@ -36,7 +34,6 @@ const Settings = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // 1. Si une nouvelle photo a été choisie, on l'upload d'abord
       let photoUrl = profile.photo;
       if (selectedFile) {
         const formData = new FormData();
@@ -50,7 +47,6 @@ const Settings = () => {
         photoUrl = uploadRes.data.filename;
       }
 
-      // 2. Mise à jour des informations textuelles
       await axios.put('http://localhost:3000/api/users/update', {
         ...profile,
         photo: photoUrl
@@ -58,7 +54,6 @@ const Settings = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // 3. SYNCHRONISATION : On demande au contexte de se rafraîchir
       await refreshUser();
       
       alert("Profil mis à jour avec succès ! La Sidebar a été actualisée.");

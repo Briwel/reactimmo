@@ -8,7 +8,6 @@ const Messages = () => {
   const [showDetails, setShowDetails] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // 1. Historique des messages mis à jour
   const [messagesHistory, setMessagesHistory] = useState({
     1: [
       { id: 101, text: "Bonjour, la résidence à Abidjan est-elle encore disponible ?", sender: "them", time: "10:42" },
@@ -22,7 +21,7 @@ const Messages = () => {
     ]
   });
 
-  // 2. Liste des contacts (Profils diversifiés)
+  // 2. Liste des contacts 
   const chatList = [
     { 
         id: 1, 

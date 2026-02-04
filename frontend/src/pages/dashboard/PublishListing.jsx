@@ -66,7 +66,7 @@ CLAUSES PARTICULIÈRES :
             if (formData.superficie) dataToSend.append('superficie', Number(formData.superficie));
             if (formData.nombrePieces) dataToSend.append('nombrePieces', Number(formData.nombrePieces));
 
-            // 3. Images (doit s'appeler 'images' pour le backend)
+            // 3. Images 
             files.forEach((file) => {
                 dataToSend.append('images', file);
             });

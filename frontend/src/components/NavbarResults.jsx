@@ -1,17 +1,14 @@
-import React, { useState } from 'react'; // 1. Import de useState
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 
 export default function NavbarResults() {
-  // 2. États pour gérer l'affichage du menu et du menu mobile
+
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Exemple de données (pourrait venir d'un Context ou Redux)
   const notifications = [
-    { id: 1, text: "Produit ajouté aux favoris", detail: "Appartement T3 - Lyon", time: "À l'instant", icon: "favorite" }
   ];
 
-  // Fermer le menu sur Escape
   React.useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') {
@@ -38,7 +35,6 @@ export default function NavbarResults() {
             </Link>
           </div>
 
-          {/* Barre de recherche centrale */}
           <div className="flex-1 max-w-lg mx-8 hidden lg:block">
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -46,18 +42,18 @@ export default function NavbarResults() {
               </div>
               <input 
                 className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 text-gray-900 focus:outline-none focus:ring-1 focus:ring-black sm:text-sm" 
-                placeholder="Paris, Lyon, Marseille..." 
+                placeholder="Rechercher une ville" 
                 type="text"
               />
             </div>
           </div>
 
-          {/* Navigation (desktop) */}
+          {/* Navigation (desktop) 
           <div className="hidden xl:flex items-center gap-6">
             <a className="text-gray-900 text-sm font-medium hover:text-black" href="#">Acheter</a>
             <a className="text-gray-600 text-sm font-medium hover:text-black" href="#">Louer</a>
             <a className="text-gray-600 text-sm font-medium hover:text-black" href="#">Vendre</a>
-          </div>
+          </div> */}
 
           {/* Mobile menu button */}
           <div className="flex xl:hidden items-center">
@@ -72,15 +68,13 @@ export default function NavbarResults() {
 
           {/* Actions utilisateur */}
           <div className="flex items-center gap-4">
-            
-            {/* BLOC NOTIFICATIONS */}
+
             <div className="relative">
               <button 
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
                 className={`flex items-center justify-center p-2 rounded-full transition-colors relative ${isNotifOpen ? 'bg-gray-100 text-black' : 'text-gray-500 hover:text-black'}`}
               >
                 <span className="material-symbols-outlined">notifications</span>
-                {/* Badge rouge si notifs présentes */}
                 <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
 
@@ -95,7 +89,7 @@ export default function NavbarResults() {
                     {notifications.map((notif) => (
                       <div key={notif.id} className="p-4 flex gap-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors">
                         <div className="size-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-red-500 text-sm">{notif.icon}</span>
+                          <span translate="no" className="material-symbols-outlined text-red-500 text-sm">{notif.icon}</span>
                         </div>
                         <div className="flex flex-col">
                           <p className="text-sm font-semibold text-gray-900">{notif.text}</p>
@@ -126,12 +120,12 @@ export default function NavbarResults() {
         <div className="xl:hidden bg-white border-t border-gray-100 shadow-sm">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex flex-col gap-3">
-              <input className="block w-full pl-3 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 text-gray-900 sm:text-sm" placeholder="Paris, Lyon, Marseille..." type="text" />
-              <nav className="flex flex-col gap-2">
+              <input className="block w-full pl-3 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 text-gray-900 sm:text-sm" placeholder="Rechercher une ville" type="text" />
+              {/* <nav className="flex flex-col gap-2">
                 <a className="px-3 py-2 rounded-md text-gray-900 font-medium hover:bg-gray-50" href="#">Acheter</a>
                 <a className="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-50" href="#">Louer</a>
                 <a className="px-3 py-2 rounded-md text-gray-700 font-medium hover:bg-gray-50" href="#">Vendre</a>
-              </nav>
+              </nav> */}
               <div className="pt-2 flex gap-2">
                 <Link to="/Login" className="flex-1 text-center px-4 py-2 rounded-lg border bg-white text-gray-900 font-medium">Se connecter</Link>
                 <Link to="/login?mode=signup" className="flex-1 text-center px-4 py-2 rounded-lg bg-black text-white font-bold">S'inscrire</Link>
