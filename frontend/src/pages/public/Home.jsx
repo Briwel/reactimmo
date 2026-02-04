@@ -2,21 +2,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import PropertyCard from '../../components/PropertyCard';
+import image1 from '../../assets/1.png'
 
-// Déclaration des villes pour le City Explorer
 const CITIES = ["Cotonou", "Abomey-calavi", "Akpakpa", "Lokossa", "Akassato", "Parakou", "Natitingou", "Malanville"];
 
 export default function Home() {
   const navigate = useNavigate();
-  const [properties, setProperties] = useState([]); // État pour stocker les biens
-  const [isLoading, setIsLoading] = useState(true); // État de chargement
+  const [properties, setProperties] = useState([]); 
+  const [isLoading, setIsLoading] = useState(true); 
 
-  // États pour les filtres de recherche
   const [searchText, setSearchText] = useState("");
   const [selectedType, setSelectedType] = useState("Maison");
   const [selectedPrice, setSelectedPrice] = useState("Budget");
 
-  // Appel à l'API au montage du composant
   useEffect(() => {
     const fetchProperties = async () => {
       try {
@@ -33,7 +31,6 @@ export default function Home() {
     fetchProperties();
   }, []);
 
-  // Fonction pour déclencher la recherche avec les filtres
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchText) params.append("query", searchText);
@@ -46,7 +43,6 @@ export default function Home() {
   return (
     <main className="flex flex-col min-h-screen bg-white">
       
-      {/* 1. HERO SECTION */}
       <section 
         className="relative flex flex-col items-center justify-center min-h-[550px] w-full bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1920')` }}
@@ -61,7 +57,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* SEARCH MODULE AVEC LISTES DÉROULANTES FONCTIONNELLES */}
           <div className="w-full max-w-3xl bg-white rounded-xl shadow-2xl p-2 sm:p-4 text-left">
             <div className="flex flex-col sm:flex-row items-center gap-2 mb-3">
               <div className="relative flex-1 w-full">
@@ -82,9 +77,7 @@ export default function Home() {
               </button>
             </div>
 
-            {/* FILTERS / SELECTS */}
             <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-              {/* Sélecteur Type */}
               <div className="relative group">
                 <select 
                   value={selectedType}

@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import GoogleLogo from '../../assets/google.png';
 import FacebookLogo from '../../assets/facebook.png';
-import Immeuble from '../../assets/immeuble.jpeg';
+import Immeuble from '../../assets/1.png';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,7 +13,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
 
-  // --- États pour la Base de Données ---
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nom, setNom] = useState("");
@@ -29,7 +28,6 @@ export default function Login() {
 
   const { setUser } = useUser();
 
-  // --- Logique de connexion / inscription ---
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -37,17 +35,13 @@ export default function Login() {
 
     try {
       if (isLogin) {
-        // Connexion
         const res = await axios.post("http://localhost:3000/api/auth/login", { email, password });
         localStorage.setItem("token", res.data.access_token);
-        // Stocker l'objet user pour affichages futurs
         localStorage.setItem("user_info", JSON.stringify(res.data.user || null));
         localStorage.setItem("user_name", res.data.user?.prenom || "Utilisateur");
-        // Mettre à jour le contexte immédiatement
         setUser(res.data.user || null);
         navigate('/dashboard');
       } else {
-        // Inscription avec Nom, Prénom, Téléphone
         await axios.post("http://localhost:3000/api/auth/register", { 
           nom, prenom, email, telephone, password 
         });
@@ -64,10 +58,8 @@ export default function Login() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
-      {/* SECTION GAUCHE : FORMULAIRE */}
       <div className="w-full lg:w-[45%] xl:w-[40%] flex flex-col h-full border-r border-gray-100 overflow-hidden">
         
-        {/* Header Logo */}
         <div className="mb-8 px-8 pt-6 pb-2">
           <a href="/">
             <div className="flex items-center gap-3 text-black">
@@ -128,7 +120,7 @@ export default function Login() {
                   <input 
                     onChange={(e) => setTelephone(e.target.value)}
                     className="w-full rounded-lg border border-gray-200 bg-gray-50 h-11 px-4 text-sm outline-none focus:border-black transition-all" 
-                    type="tel" placeholder="+225..." required 
+                    type="tel" placeholder="+229 xx xx xx xx xx" required 
                   />
                 </div>
               </>
@@ -183,7 +175,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* SECTION DROITE : IMAGE & PRESTIGE */}
       <div className="hidden lg:flex lg:w-[55%] xl:w-[60%] h-full relative overflow-hidden bg-black">
         <img 
           src={Immeuble} 

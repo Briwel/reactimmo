@@ -8,7 +8,7 @@ const MyListings = () => {
     const navigate = useNavigate();
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('Tous'); // Filtre : Tous, Disponible, Vendu, Loué
+    const [filter, setFilter] = useState('Tous'); 
     const [actionError, setActionError] = useState(null);
     const [actionSuccess, setActionSuccess] = useState(null);
 

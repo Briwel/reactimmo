@@ -91,7 +91,7 @@ const ContactSidebar = ({ propertyId, prix, agent, statut, showOwnerActions = fa
         date,
       });
       setSuccess(res.data?.message || 'Réservation envoyée.');
-      // clear date/phone
+
       setDate(''); setPhone('');
     } catch (err) {
       console.error('Erreur réservation', err);

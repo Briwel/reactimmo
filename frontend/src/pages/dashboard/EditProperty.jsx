@@ -16,7 +16,7 @@ const EditProperty = () => {
         description: '',
         type: 'appartement',
         adresse: '',
-        contratClauses: '' // On va récupérer ça du backend
+        contratClauses: '' 
     });
 
     useEffect(() => {
@@ -27,7 +27,6 @@ const EditProperty = () => {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                // On peuple le formulaire avec les données reçues, y compris le contrat
                 const data = response.data;
                 setFormData({
                     titre: data.titre,
@@ -35,7 +34,7 @@ const EditProperty = () => {
                     description: data.description,
                     type: data.type,
                     adresse: data.adresse,
-                    contratClauses: data.contrat?.clauses || '' // Récupération sécurisée
+                    contratClauses: data.contrat?.clauses || '' 
                 });
             } catch (error) {
                 console.error("Erreur chargement:", error);

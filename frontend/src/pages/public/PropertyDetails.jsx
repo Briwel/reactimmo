@@ -27,7 +27,7 @@ const PropertyDetails = () => {
           setError('ID manquant');
           return;
         }
-        // Récupère la propriété via l'API dédiée
+
         const res = await axios.get(`http://localhost:3000/api/properties/${id}`);
         console.log('GET /api/properties/{id} ->', id, res.data);
         setProperty(res.data);
@@ -47,7 +47,7 @@ const PropertyDetails = () => {
       try {
         const res = await axios.get(`http://localhost:3000/api/operations/property/${id}`);
         const ops = res.data || [];
-        // Prefer any operation that already has a Contrat linked
+
         const opWithContrat = ops.find((op) => op.contrat);
         if (opWithContrat?.contrat) {
           const c = opWithContrat.contrat;
@@ -59,7 +59,7 @@ const PropertyDetails = () => {
           if (client) lines.push(`Client: ${client.prenom ?? ''} ${client.nom ?? ''} ${client.email ? '(' + client.email + ')' : ''}`);
           setContractText(lines.join('\n'));
         } else if (property?.contratClauses) {
-          // Fall back to textual clauses stored on the property (set at publication)
+
           setContractText(property.contratClauses);
         } else {
           setContractText(null);
@@ -82,7 +82,6 @@ const PropertyDetails = () => {
       const email = (interest.email || '').trim();
       const telephone = (interest.telephone || '').trim();
 
-      // Require at least a name or a telephone
       if (!nom && !telephone) {
         setOpError('Veuillez saisir au moins votre nom ou votre numéro de téléphone.');
         return;
