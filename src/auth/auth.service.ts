@@ -48,7 +48,10 @@ export class AuthService {
   }
 
   // 2. VALIDATION : Vérifie les identifiants lors du Login
-  async validateUser(email: string, pass: string) {
+  async validateUser(
+    email: string,
+    pass: string,
+  ): Promise<Omit<User, 'password'>> {
     // On cherche l'utilisateur via le service qui inclut la relation 'proprietaire'
     const user = await this.usersService.findByEmail(email);
 
@@ -63,11 +66,7 @@ export class AuthService {
   }
 
   // 3. LOGIN : Génère le JWT Token
-  login(user: {
-    id: number;
-    email: string;
-    proprietaire?: { nom?: string; prenom?: string } | null;
-  }) {
+  login(user: Pick<User, 'id' | 'email' | 'proprietaire'>) {
     // Le payload contient l'ID unique (sub) et l'email
     const payload = {
       email: user.email,

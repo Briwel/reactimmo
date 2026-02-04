@@ -2,7 +2,6 @@ import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateProprietaireDto } from '../modules/users/dto/create-proprietaire.dto';
 import { LoginDto } from '../modules/users/dto/login.dto';
-import { Proprietaire } from '../modules/users/entities/proprietaire.entity';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 
@@ -25,11 +24,7 @@ export class AuthController {
     );
 
     // 2. Maintenant qu'on a un vrai "user", on peut générer le token JWT
-    return this.authService.login({
-      id: user.id,
-      email: user.email,
-      proprietaire: (user as any)?.proprietaire,
-    });
+    return this.authService.login(user);
   }
 
   @Get('profile')

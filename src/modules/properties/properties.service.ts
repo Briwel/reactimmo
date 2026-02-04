@@ -27,7 +27,10 @@ export class PropertiesService {
 
   async createWithPhotos(
     dto: CreatePropertyDto,
-    files: Express.Multer.File[],
+    files: {
+      mainPhoto?: Express.Multer.File[];
+      images?: Express.Multer.File[];
+    },
     userId: number,
   ): Promise<Propriete> {
     // 1. Vérifier si le profil propriétaire existe
@@ -53,36 +56,52 @@ export class PropertiesService {
 
     const propertySaved: Propriete = await this.proprieteRepo.save(nouvelle);
 
-    // 3. Sauvegarder les photos
-    if (files && files.length > 0) {
-      const photos = files.map((file) => {
-        const photo = new Photo();
-        photo.url = file.filename;
-        photo.propriete = propertySaved;
-        return photo;
-      });
-      await this.photoRepo.save(photos);
+    const mainFile = files?.mainPhoto?.[0];
+    const extraFiles = files?.images ?? [];
+
+    if (!mainFile) {
+      throw new BadRequestException('La photo principale est obligatoire.');
     }
+    if (extraFiles.length < 5) {
+      throw new BadRequestException(
+        'Veuillez ajouter au moins 5 photos supplémentaires.',
+      );
+    }
+
+    // 3. Sauvegarder les photos (1 principale + autres)
+    const photos = [
+      { file: mainFile, isMain: true },
+      ...extraFiles.map((file) => ({ file, isMain: false })),
+    ].map(({ file, isMain }) => {
+      const photo = new Photo();
+      photo.url = file.filename;
+      photo.isMain = isMain;
+      photo.propriete = propertySaved;
+      return photo;
+    });
+    await this.photoRepo.save(photos);
 
     // 4. Retourner l'objet complet avec photos
     return this.findOne(propertySaved.id);
   }
 
   async findManyByUser(ownerId: number): Promise<Propriete[]> {
-    return this.proprieteRepo.find({
+    const props = await this.proprieteRepo.find({
       where: { proprietaire: { id: ownerId } },
       relations: ['photos'],
     });
+    return props.map((p) => this.sortPhotos(p));
   }
 
   // Retourne toutes les propriétés publiques (avec relations utiles)
   async findAll(): Promise<Propriete[]> {
     // Only return properties that are available to the public
-    return this.proprieteRepo.find({
+    const props = await this.proprieteRepo.find({
       where: { statut: StatutPropriete.DISPONIBLE },
       relations: ['photos', 'proprietaire'],
       order: { id: 'DESC' },
     });
+    return props.map((p) => this.sortPhotos(p));
   }
 
   async findOne(id: number): Promise<Propriete> {
@@ -91,7 +110,7 @@ export class PropertiesService {
       relations: ['photos', 'proprietaire', 'proprietaire.user'],
     });
     if (!p) throw new NotFoundException('Propriété introuvable');
-    return p;
+    return this.sortPhotos(p);
   }
 
   async remove(id: number): Promise<Propriete> {
@@ -102,15 +121,40 @@ export class PropertiesService {
   async update(
     id: number,
     dto: CreatePropertyDto,
-    files: Express.Multer.File[],
+    files: {
+      mainPhoto?: Express.Multer.File[];
+      images?: Express.Multer.File[];
+    },
   ): Promise<Propriete> {
     const p = await this.proprieteRepo.preload({ id, ...dto });
     if (!p) throw new NotFoundException('Propriété introuvable');
 
-    if (files && files.length > 0) {
-      const newPhotos = files.map((file) => {
+    const mainFile = files?.mainPhoto?.[0];
+    const extraFiles = files?.images ?? [];
+
+    if (mainFile) {
+      const existing = await this.photoRepo.find({
+        where: { propriete: { id } },
+      });
+      if (existing.length > 0) {
+        existing.forEach((photo) => {
+          photo.isMain = false;
+        });
+        await this.photoRepo.save(existing);
+      }
+
+      const mainPhoto = new Photo();
+      mainPhoto.url = mainFile.filename;
+      mainPhoto.isMain = true;
+      mainPhoto.propriete = p;
+      await this.photoRepo.save(mainPhoto);
+    }
+
+    if (extraFiles.length > 0) {
+      const newPhotos = extraFiles.map((file) => {
         const photo = new Photo();
         photo.url = file.filename;
+        photo.isMain = false;
         photo.propriete = p;
         return photo;
       });
@@ -148,8 +192,11 @@ export class PropertiesService {
           body: `${payload.name || 'Un visiteur'} a envoyé un message: ${payload.message?.slice(0, 200) || ''}`,
         },
       );
-    } catch (e) {
-      console.warn('Impossible de créer la notification:', e?.message || e);
+    } catch (error) {
+      console.warn(
+        'Impossible de créer la notification:',
+        this.getErrorMessage(error),
+      );
     }
 
     return {
@@ -181,8 +228,11 @@ export class PropertiesService {
           body: `${payload.name || 'Un visiteur'} demande une visite le ${payload.date || 'date non précisée'}`,
         },
       );
-    } catch (e) {
-      console.warn('Impossible de créer la notification:', e?.message || e);
+    } catch (error) {
+      console.warn(
+        'Impossible de créer la notification:',
+        this.getErrorMessage(error),
+      );
     }
 
     return {
@@ -229,8 +279,11 @@ export class PropertiesService {
           body: `Le bien a été marqué comme ${saved.statut}`,
         },
       );
-    } catch (e) {
-      console.warn('Impossible de créer notification statut:', e?.message || e);
+    } catch (error) {
+      console.warn(
+        'Impossible de créer notification statut:',
+        this.getErrorMessage(error),
+      );
     }
 
     // emit socket update so dashboard updates in realtime
@@ -241,5 +294,19 @@ export class PropertiesService {
     }
 
     return saved;
+  }
+
+  private sortPhotos(p: Propriete): Propriete {
+    if (!p?.photos || p.photos.length === 0) return p;
+    p.photos = [...p.photos].sort((a, b) => {
+      if (a.isMain === b.isMain) return a.id - b.id;
+      return a.isMain ? -1 : 1;
+    });
+    return p;
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    return typeof error === 'string' ? error : String(error);
   }
 }

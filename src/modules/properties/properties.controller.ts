@@ -12,13 +12,14 @@ import {
   Req,
   Patch,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { PropertiesService } from './properties.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { Propriete } from './entities/propriete.entity';
+import type { Request } from 'express';
 
 const multerConfig = {
   storage: diskStorage({
@@ -34,16 +35,43 @@ interface RequestWithUser extends Request {
   user: { id: number; email: string };
 }
 
+type PropertyUploadFiles = {
+  mainPhoto?: Express.Multer.File[];
+  images?: Express.Multer.File[];
+};
+
+type ContactPayload = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  message?: string;
+};
+
+type ReservePayload = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  date?: string;
+};
+
 @Controller('properties')
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(FilesInterceptor('images', 10, multerConfig))
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'mainPhoto', maxCount: 1 },
+        { name: 'images', maxCount: 20 },
+      ],
+      multerConfig,
+    ),
+  )
   async create(
     @Body() dto: CreatePropertyDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files: PropertyUploadFiles,
     @Req() req: RequestWithUser,
   ): Promise<Propriete> {
     // On envoie directement 'files' et 'req.user.id' au service
@@ -57,13 +85,19 @@ export class PropertiesController {
 
   // Endpoint to receive contact messages for a property
   @Post(':id/contact')
-  async contactAgent(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
+  async contactAgent(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ContactPayload,
+  ) {
     return this.propertiesService.contactAgent(id, body);
   }
 
   // Endpoint to request a visit/reservation
   @Post(':id/reserve')
-  async reserveVisit(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
+  async reserveVisit(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ReservePayload,
+  ) {
     return this.propertiesService.reserveVisit(id, body);
   }
 
@@ -95,11 +129,19 @@ export class PropertiesController {
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(FilesInterceptor('images', 10, multerConfig))
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'mainPhoto', maxCount: 1 },
+        { name: 'images', maxCount: 20 },
+      ],
+      multerConfig,
+    ),
+  )
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreatePropertyDto,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() files: PropertyUploadFiles,
   ): Promise<Propriete> {
     return this.propertiesService.update(id, dto, files);
   }

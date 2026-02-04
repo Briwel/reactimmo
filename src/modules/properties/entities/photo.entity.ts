@@ -9,6 +9,9 @@ export class Photo {
   @Column({ type: 'text' })
   url: string;
 
+  @Column({ type: 'boolean', default: false })
+  isMain: boolean;
+
   @ManyToOne(() => Propriete, (p) => p.photos, { onDelete: 'CASCADE' })
   propriete: Propriete;
 }
